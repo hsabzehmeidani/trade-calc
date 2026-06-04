@@ -30,7 +30,7 @@ Position Size = (Capital × Risk% per Trade) / (Stop Loss% + Fee%)
 ```
 
 **Explanation**:  
-After calculating the stop loss percentage, this formula determines the **dollar value** of the position you should take. It ensures that if the stop loss is hit, you lose exactly the risk percentage you predefined (e.g., 0.8% of your total capital).
+After calculating the stop loss percentage, this formula determines the **dollar value** of the position you should take. It ensures that if the stop loss is hit, you lose exactly the risk percentage you predefined (e.g., 1% of your total capital).
 
 ---
 
