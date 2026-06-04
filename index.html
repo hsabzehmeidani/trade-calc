@@ -32,7 +32,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-5 glass rounded-3xl shadow-xl p-8 border border-slate-200">
+            <div class="lg:col-span-5 glass rounded-3xl shadow p-8 border border-slate-200">
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm text-slate-500 mb-2">Initial Capital (USD)</label>
@@ -162,47 +162,50 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="winrate-results"></div>
                     </div>
                 </div>
-            
-				<div class="glass rounded-3xl p-8 border border-slate-200 shadow">
-                    <h3 class="font-semibold text-lg mb-6 flex items-center gap-3">
-                        <i class="fas fa-clipboard-list"></i>
-                        Live Trade Journal
-                    </h3>
-
-                    <div class="flex gap-3 mb-6">
-                        <input type="number" id="tradeAmount" placeholder="Trade Result (e.g. 21 or -14)" 
-                               class="flex-1 bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
-                        <button onclick="addTrade()" 
-                                class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-2xl font-medium transition-colors">
-                            Add
-                        </button>
-                    </div>
-
-					<div id="trade-list" 
-						 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto mb-6 p-1">
-					</div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
-                        <div>
-                            <div class="text-slate-500 text-sm">Current Capital</div>
-                            <div id="current-capital" class="text-2xl font-bold text-slate-800">$2,000</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-500 text-sm">Total P&amp;L</div>
-                            <div id="total-pl" class="text-2xl font-bold">$0</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-500 text-sm">Win Rate</div>
-                            <div id="current-winrate" class="text-2xl font-bold text-emerald-600">0%</div>
-                        </div>
-                        <div>
-                            <div class="text-slate-500 text-sm">Trades to Goal</div>
-                            <div id="trades-to-goal" class="text-2xl font-bold text-amber-600">∞</div>
-                        </div>
-                    </div>
-                </div>
+           
 			</div>
         </div>
+
+		<div class="mt-6">
+			<div class="glass rounded-3xl p-8 border border-slate-200 shadow">
+				<h3 class="font-semibold text-lg mb-6 flex items-center gap-3">
+					<i class="fas fa-clipboard-list"></i>
+					Live Trade Journal
+				</h3>
+
+				<div class="flex gap-3 mb-6">
+					<input type="number" id="tradeAmount" placeholder="Trade Result (e.g. 21 or -14)" 
+						   class="flex-1 min-w-0 bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+					<button onclick="addTrade()" 
+							class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-medium transition-colors">
+						Add
+					</button>
+				</div>
+
+				<div id="trade-list" 
+					 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-80 overflow-y-auto mb-6 p-1">
+				</div>
+
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
+					<div>
+						<div class="text-slate-500 text-sm">Current Capital</div>
+						<div id="current-capital" class="text-2xl font-bold text-slate-800">$2,000</div>
+					</div>
+					<div>
+						<div class="text-slate-500 text-sm">Total P&amp;L</div>
+						<div id="total-pl" class="text-2xl font-bold">$0</div>
+					</div>
+					<div>
+						<div class="text-slate-500 text-sm">Win Rate</div>
+						<div id="current-winrate" class="text-2xl font-bold text-emerald-600">0%</div>
+					</div>
+					<div>
+						<div class="text-slate-500 text-sm">Trades to Goal</div>
+						<div id="trades-to-goal" class="text-2xl font-bold text-amber-600">∞</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
         <footer class="text-center text-slate-400 text-xs mt-12">
             Calculations are real-time • Capital resets to initial for each position sizing
@@ -322,7 +325,7 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.round(amount));
         }
 
-		function showTooltip(el) {
+		function showTooltipOld(el) {
 			const label = el.parentElement.textContent.trim().replace('ⓘ', '').trim();
 			
 			const messages = {
@@ -337,6 +340,82 @@
 
 			alert(messages[label] || "Formula explanation");
 		}
+
+function showTooltip(el) {
+    const existingTooltip = document.getElementById('customTooltip');
+    if (existingTooltip) existingTooltip.remove();
+    
+    const label = el.parentElement.textContent.trim().replace('ⓘ', '').trim();
+    
+    const messages = {
+        "Monthly Target": "Monthly Target = Initial Capital × Monthly Goal %",
+        "Position Size": "Position Size = (Capital × Risk%) / (Stop Loss% + Fee%)",
+        "Margin Required": "Margin Required = Position Size / Leverage",
+        "Avg. Profit per Win": "Avg. Profit per Win = 1.5R (50% at 1R + 50% at 2R)",
+        "Avg. Loss per Loss": "Avg. Loss per Loss = -1R (Full stop loss hit)",
+        "Stop Loss (%)": "Stop Loss % = |Entry Price - Stop Price| / Entry Price × 100",
+        "Expected Trades by Win Rate (Mathematical Expectation)": "Expected Profit per Trade = (Win Rate × Avg. Profit) + ((1 - Win Rate) × Avg. Loss)\nTrades Needed = ceil(Monthly Target / Expected Profit per Trade)"
+    };
+    
+    const formulaText = messages[label] || "Formula explanation available";
+    const title = label === "Expected Trades by Win Rate (Mathematical Expectation)" ? "Expected Trades" : label;
+    
+    const tooltip = document.createElement('div');
+    tooltip.id = 'customTooltip';
+    tooltip.className = 'fixed inset-0 flex items-center justify-center z-50 transition-all duration-300';
+    tooltip.style.backgroundColor = 'rgba(0,0,0,0.3)';
+    tooltip.style.backdropFilter = 'blur(2px)';
+    
+    tooltip.innerHTML = `
+        <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all duration-300">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 text-xl font-light">
+                ×
+            </button>
+            
+            <div class="p-6">
+                <div class="border-b border-gray-200 pb-3 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">${title}</h3>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Formula</div>
+                    <div class="font-mono text-sm text-gray-800 whitespace-pre-line">${formulaText}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const modalContent = tooltip.querySelector('.relative');
+    modalContent.style.opacity = '0';
+    modalContent.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        modalContent.style.opacity = '1';
+        modalContent.style.transform = 'scale(1)';
+    }, 10);
+    
+    const closeTooltip = () => {
+        modalContent.style.opacity = '0';
+        modalContent.style.transform = 'scale(0.95)';
+        setTimeout(() => tooltip.remove(), 200);
+    };
+    
+    const buttons = tooltip.querySelectorAll('button');
+    buttons.forEach(btn => btn.addEventListener('click', closeTooltip));
+    tooltip.addEventListener('click', (e) => {
+        if (e.target === tooltip) closeTooltip();
+    });
+    
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeTooltip();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
 
         function calculateStopPercent() {
             const entry = parseFloat(document.getElementById('entryPrice').value) || 100;
