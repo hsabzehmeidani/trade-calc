@@ -1,2 +1,2 @@
 # TradeCalc
-Trading Calculator - Risk & Position Manager
+[Trading Calculator](https://hsabzehmeidani.github.io/trade-calc/) - Risk & Position Manager
