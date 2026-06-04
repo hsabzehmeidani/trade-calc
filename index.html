@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeCalc - Risk & Position Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(16px);
+        }
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-zinc-50 to-slate-100 text-slate-800 min-h-screen">
+    <div class="max-w-7xl mx-auto p-6">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Trading Calculator</h1>
+            </div>
+            <div class="text-sm text-slate-500">
+                Initial Capital: <span id="header-capital" class="font-mono font-semibold text-emerald-700">$2,000</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-5 glass rounded-3xl shadow-xl p-8 border border-slate-200">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-2">Initial Capital (USD)</label>
+                        <input type="number" id="capital" value="2000" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 text-2xl font-mono focus:outline-none input-focus">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-2">Monthly Profit Goal (%)</label>
+                        <input type="number" id="goalPercent" value="10" step="0.1" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 text-xl font-mono focus:outline-none input-focus">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-slate-500 mb-2">Entry Price</label>
+                            <input type="number" id="entryPrice" value="100" step="0.01" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-500 mb-2">Stop Loss Price</label>
+                            <input type="number" id="stopPrice" value="98.5" step="0.01" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-2 flex items-center gap-2">
+                            Stop Loss (%)
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </label>
+                        <input type="number" id="stopPercent" value="1.5" step="0.01" readonly class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-5 py-4 font-mono text-slate-600">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-slate-500 mb-2">Risk per Trade (%)</label>
+                            <input type="number" id="riskPercent" value="0.8" step="0.1" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-500 mb-2">Fee Round Trip (%)</label>
+                            <input type="number" id="feePercent" value="0.2" step="0.01" class="w-full bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-slate-500 mb-2">Leverage</label>
+                        <div class="flex items-center gap-3 bg-white border border-slate-300 rounded-2xl px-5 py-4">
+                            <input type="number" id="leverage" value="5" class="flex-1 bg-transparent font-mono text-2xl focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass rounded-3xl p-6 border border-slate-200 shadow">
+                        <div class="text-slate-500 text-sm flex items-center gap-2">
+                            Monthly Target
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </div>
+                        <div id="monthly-target" class="text-3xl font-bold text-emerald-600 mt-2">$200</div>
+                        <div id="target-percent" class="text-sm text-slate-500">10% of capital</div>
+                    </div>
+
+                    <div class="glass rounded-3xl p-6 border border-slate-200 shadow">
+                        <div class="text-slate-500 text-sm flex items-center gap-2">
+                            Position Size
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </div>
+                        <div id="position-size" class="text-3xl font-bold mt-2">$10,666</div>
+                    </div>
+
+                    <div class="glass rounded-3xl p-6 border border-slate-200 shadow">
+                        <div class="text-slate-500 text-sm flex items-center gap-2">
+                            Margin Required
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </div>
+                        <div id="margin" class="text-3xl font-bold mt-2">$2,133</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass rounded-3xl p-6 border border-slate-200 shadow">
+                        <div class="text-slate-500 text-sm flex items-center gap-2">
+                            Avg. Profit per Win
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </div>
+                        <div id="profit-per-win" class="text-3xl font-bold text-emerald-600 mt-2">$160</div>
+                        <div class="flex gap-4 mt-4 text-sm">
+                            <div class="flex-1 bg-emerald-50 rounded-xl p-3">
+                                <div class="text-emerald-600">50% at 1R</div>
+                                <div id="profit-1r" class="font-semibold">$80</div>
+                            </div>
+                            <div class="flex-1 bg-emerald-50 rounded-xl p-3">
+                                <div class="text-emerald-600">50% at 2R</div>
+                                <div id="profit-2r" class="font-semibold">$160</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-3xl p-6 border border-slate-200 shadow">
+                        <div class="text-slate-500 text-sm flex items-center gap-2">
+                            Avg. Loss per Loss
+                            <span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+                        </div>
+                        <div id="loss-per-loss" class="text-3xl font-bold text-red-600 mt-2">-$80</div>
+                        <div class="flex gap-4 mt-4 text-sm">
+                            <div class="flex-1 bg-red-50 rounded-xl p-3">
+                                <div class="text-red-600">100% at -1R</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl p-8 border border-slate-200 shadow">
+                    <h3 class="font-semibold text-lg mb-6">Trades Needed to Reach Goal</h3>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 mb-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium text-emerald-700">Optimistic Scenario (100% Win Rate)</div>
+                            </div>
+                            <div id="trades-best" class="text-5xl font-bold text-emerald-600">2</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-sm mb-4">
+							Expected Trades by Win Rate (Mathematical Expectation)
+							<span onclick="showTooltip(this)" class="cursor-help text-emerald-600 hover:text-emerald-700">ⓘ</span>
+						</div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="winrate-results"></div>
+                    </div>
+                </div>
+            
+				<div class="glass rounded-3xl p-8 border border-slate-200 shadow">
+                    <h3 class="font-semibold text-lg mb-6 flex items-center gap-3">
+                        <i class="fas fa-clipboard-list"></i>
+                        Live Trade Journal
+                    </h3>
+
+                    <div class="flex gap-3 mb-6">
+                        <input type="number" id="tradeAmount" placeholder="Trade Result (e.g. 21 or -14)" 
+                               class="flex-1 bg-white border border-slate-300 rounded-2xl px-5 py-4 font-mono focus:outline-none input-focus">
+                        <button onclick="addTrade()" 
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-2xl font-medium transition-colors">
+                            Add
+                        </button>
+                    </div>
+
+					<div id="trade-list" 
+						 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto mb-6 p-1">
+					</div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
+                        <div>
+                            <div class="text-slate-500 text-sm">Current Capital</div>
+                            <div id="current-capital" class="text-2xl font-bold text-slate-800">$2,000</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-500 text-sm">Total P&amp;L</div>
+                            <div id="total-pl" class="text-2xl font-bold">$0</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-500 text-sm">Win Rate</div>
+                            <div id="current-winrate" class="text-2xl font-bold text-emerald-600">0%</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-500 text-sm">Trades to Goal</div>
+                            <div id="trades-to-goal" class="text-2xl font-bold text-amber-600">∞</div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+        </div>
+
+        <footer class="text-center text-slate-400 text-xs mt-12">
+            Calculations are real-time • Capital resets to initial for each position sizing
+        </footer>
+    </div>
+
+    <script>
+		let trades = [];
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: 'USD', 
+                maximumFractionDigits: 0 
+            }).format(Math.round(amount));
+        }
+		
+		function addTrade() {
+            const amountInput = document.getElementById('tradeAmount');
+            const amount = parseFloat(amountInput.value);
+            
+            if (isNaN(amount) || amount === 0) {
+                alert("Please enter a valid trade result");
+                return;
+            }
+
+            trades.push(amount);
+            amountInput.value = '';
+            renderTrades();
+            updatePerformance();
+        }
+
+        function deleteTrade(index) {
+            trades.splice(index, 1);
+            renderTrades();
+            updatePerformance();
+        }
+
+		function renderTrades() {
+			const container = document.getElementById('trade-list');
+			container.innerHTML = '';
+
+			if (trades.length === 0) {
+				container.innerHTML = `
+					<p class="text-slate-400 text-center py-12 col-span-full">
+						No trades yet. Add your first trade result.
+					</p>`;
+				return;
+			}
+
+			trades.forEach((amount, index) => {
+				const isWin = amount > 0;
+				
+				const div = document.createElement('div');
+				div.className = `
+					trade-item bg-white border rounded-2xl p-4 hover:shadow-md transition-all
+					${isWin ? 'border-emerald-200' : 'border-red-200'}
+				`;
+				
+				div.innerHTML = `
+					<div class="flex justify-between items-start">
+						<div>
+							<span class="text-2xl ${isWin ? 'text-emerald-600' : 'text-red-600'}">
+								${isWin ? '↑' : '↓'}
+							</span>
+							<div class="mt-2">
+								<span class="font-mono text-xl font-semibold ${isWin ? 'text-emerald-700' : 'text-red-700'}">
+									${formatCurrency(Math.abs(amount))}
+								</span>
+							</div>
+						</div>
+						
+						<button onclick="deleteTrade(${index})" 
+								class="text-slate-300 hover:text-red-500 transition-colors p-1">
+							<i class="fas fa-trash text-lg"></i>
+						</button>
+					</div>
+				`;
+				
+				container.appendChild(div);
+			});
+		}
+
+		function updatePerformance() {
+			const initialCapital = parseFloat(document.getElementById('capital').value) || 2000;
+			const goalPercent = parseFloat(document.getElementById('goalPercent').value) || 10;
+			const monthlyTarget = initialCapital * (goalPercent / 100);
+
+			const totalPL = trades.reduce((sum, t) => sum + t, 0);
+			const currentCapital = initialCapital + totalPL;
+			const remaining = Math.max(0, monthlyTarget - totalPL);
+
+			const wins = trades.filter(t => t > 0).length;
+			const winRate = trades.length > 0 ? Math.round((wins / trades.length) * 100) : 0;
+
+			let expectedPerTrade = 0;
+
+			if (trades.length >= 4) {
+				expectedPerTrade = totalPL / trades.length;
+			} else {
+				const avgProfit = parseFloat(document.getElementById('profit-per-win').textContent.replace(/[$,]/g, '')) || 160;
+				const avgLoss   = Math.abs(parseFloat(document.getElementById('loss-per-loss').textContent.replace(/[$,]/g, ''))) || 80;
+				
+				expectedPerTrade = (0.60 * avgProfit) + (0.40 * -avgLoss);
+			}
+
+			const tradesToGoal = expectedPerTrade > 0 ? Math.ceil(remaining / expectedPerTrade) : '∞';
+
+			document.getElementById('current-capital').textContent = formatCurrency(currentCapital);
+			document.getElementById('total-pl').textContent = formatCurrency(totalPL);
+			document.getElementById('total-pl').className = `text-2xl font-bold ${totalPL >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+			document.getElementById('current-winrate').textContent = winRate + '%';
+			document.getElementById('trades-to-goal').textContent = tradesToGoal;
+		}
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.round(amount));
+        }
+
+		function showTooltip(el) {
+			const label = el.parentElement.textContent.trim().replace('ⓘ', '').trim();
+			
+			const messages = {
+				"Monthly Target": "Monthly Target = Initial Capital × Monthly Goal %",
+				"Position Size": "Position Size = (Capital × Risk%) / (Stop Loss% + Fee%)",
+				"Margin Required": "Margin Required = Position Size / Leverage",
+				"Avg. Profit per Win": "Avg. Profit per Win = 1.5R (50% at 1R + 50% at 2R)",
+				"Avg. Loss per Loss": "Avg. Loss per Loss = -1R (Full stop loss hit)",
+				"Stop Loss (%)": "Stop Loss % = |Entry Price - Stop Price| / Entry Price × 100",
+				"Expected Trades by Win Rate (Mathematical Expectation)": "Expected Profit per Trade = (Win Rate × Avg. Profit) + ((1 - Win Rate) × Avg. Loss)\nTrades Needed = ceil(Monthly Target / Expected Profit per Trade)"
+			};
+
+			alert(messages[label] || "Formula explanation");
+		}
+
+        function calculateStopPercent() {
+            const entry = parseFloat(document.getElementById('entryPrice').value) || 100;
+            const stop = parseFloat(document.getElementById('stopPrice').value) || 98.5;
+            if (entry > 0) {
+                const stopPercent = Math.abs(entry - stop) / entry * 100;
+                document.getElementById('stopPercent').value = stopPercent.toFixed(2);
+            }
+        }
+
+        function calculateAll() {
+            const capital = parseFloat(document.getElementById('capital').value) || 2000;
+            const goalPercent = parseFloat(document.getElementById('goalPercent').value) || 10;
+            const riskPercent = parseFloat(document.getElementById('riskPercent').value) || 0.8;
+            const feePercent = parseFloat(document.getElementById('feePercent').value) || 0.2;
+            const stopPercent = parseFloat(document.getElementById('stopPercent').value) || 1.5;
+            const leverage = parseFloat(document.getElementById('leverage').value) || 5;
+
+            const monthlyTarget = capital * (goalPercent / 100);
+            document.getElementById('monthly-target').textContent = formatCurrency(monthlyTarget);
+            document.getElementById('target-percent').textContent = `${goalPercent}% of capital`;
+            document.getElementById('header-capital').textContent = formatCurrency(capital);
+
+            const positionSize = (capital * (riskPercent / 100)) / ((stopPercent / 100) + (feePercent / 100));
+            document.getElementById('position-size').textContent = formatCurrency(positionSize);
+
+            const margin = positionSize / leverage;
+            document.getElementById('margin').textContent = formatCurrency(margin);
+
+            const rValue = positionSize * (stopPercent / 100);
+
+            const avgProfit = rValue * 1.5;
+            const avgLoss = -rValue;
+
+            document.getElementById('profit-per-win').textContent = formatCurrency(avgProfit);
+            document.getElementById('loss-per-loss').textContent = formatCurrency(avgLoss);
+
+            document.getElementById('profit-1r').textContent = formatCurrency(rValue * 0.5);
+            document.getElementById('profit-2r').textContent = formatCurrency(rValue * 1);
+
+            const tradesBest = Math.ceil(monthlyTarget / avgProfit);
+            document.getElementById('trades-best').textContent = tradesBest;
+
+            const winRates = [90, 80, 70, 60, 50, 40, 30, 20, 10];
+            let html = '';
+
+            winRates.forEach(wr => {
+                const winRateDec = wr / 100;
+                const expectedProfitPerTrade = (winRateDec * avgProfit) + ((1 - winRateDec) * avgLoss);
+                let tradesNeeded = expectedProfitPerTrade > 0 ? Math.ceil(monthlyTarget / expectedProfitPerTrade) : '∞';
+				tradesNeeded = tradesNeeded < 1000 ? tradesNeeded : '∞';
+
+                html += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 hover:shadow transition-shadow">
+                        <div class="flex justify-between items-center">
+                            <div class="font-medium text-slate-700">${wr}% Win Rate</div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-slate-800">${tradesNeeded}</div>
+                                <div class="text-xs text-slate-500">trades</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('winrate-results').innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.id === 'entryPrice' || input.id === 'stopPrice') calculateStopPercent();
+                    calculateAll();
+					updatePerformance();
+                });
+            });
+
+			document.getElementById('tradeAmount').addEventListener('keypress', function(event) {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					addTrade();
+				}
+			});
+
+            calculateStopPercent();
+            calculateAll();
+			updatePerformance();
+        });
+    </script>
+</body>
+</html>

@@ -1,2 +1,2 @@
-# trade-calc
-TradeCalc - Risk &amp; Position Manager
+# TradeCalc
+Trading Calculator - Risk & Position Manager
